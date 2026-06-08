@@ -29,15 +29,32 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirmed") === "1") {
-      toast.success("E-mail confirmado! Agora entre com sua senha.");
       window.history.replaceState({}, "", window.location.pathname);
+      setMode("signin");
+
+      const keepOnLogin = async () => {
+        await supabase.auth.signOut();
+        await new Promise((resolve) => window.setTimeout(resolve, 300));
+        await supabase.auth.signOut();
+        if (isMounted) toast.success("E-mail confirmado! Agora entre com sua senha.");
+      };
+
+      keepOnLogin();
+      return () => {
+        isMounted = false;
+      };
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/app", replace: true });
+      if (isMounted && data.session) navigate({ to: "/app", replace: true });
     });
+
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   async function submit(e: React.FormEvent) {
