@@ -108,13 +108,13 @@ function AuthPage() {
             onClick={async () => {
               setLoading(true);
               try {
-                const { lovable } = await import("@/integrations/lovable");
-                const result = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: `${window.location.origin}/app`,
+                const { error } = await supabase.auth.signInWithOAuth({
+                  provider: "google",
+                  options: {
+                    redirectTo: `${window.location.origin}/app`,
+                  },
                 });
-                if (result.error) throw new Error(result.error.message ?? "Falha no login com Google");
-                if (result.redirected) return;
-                navigate({ to: "/app", replace: true });
+                if (error) throw error;
               } catch (err) {
                 toast.error(err instanceof Error ? err.message : "Erro no login com Google");
                 setLoading(false);
